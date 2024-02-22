@@ -1,0 +1,34 @@
+doctype html
+html
+  head
+    title Register
+    link(rel="stylesheet" type="text/css" href="./stylesheets/styles.css")
+    script(src="https://code.jquery.com/jquery-3.6.4.min.js")
+  body
+    header
+      h1 Register
+    if(messages.error)
+      p.error-message=messages.error
+    main
+      form(id="register-form" method='post' action='/register')
+        label(for="profilePic") Profile Picture (Upload or URL):
+        input(type="file" id='profilePic' name="profilePic" accept="image/*")
+        input(type="text" id='profilePicUrl' name="profilePicUrl" placeholder="or enter URL")
+        label(for="firstname") First Name:
+        input(type="text" id="firstname" name="firstName" required)
+        br
+        label(for="lastname") Last Name:
+        input(type="text" id="lastname" name="lastName" required)
+        br
+        label(for="email") Email:
+        input(type="email" id="email" name="email" required)
+        br
+        label(for="password") Password:
+        input(type="password" id="password" name="password" required)
+        br
+        label(for="confPassowrd") Confirm Password:
+        input(type="password" id="confPassword" name="confPassword" required)        
+        input(type="submit" value="Register")
+      p
+        | Already have an account? 
+        a(href="/login") Login

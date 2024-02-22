@@ -1,0 +1,396 @@
+doctype html
+html
+  head
+    title #{user.fullName}'s Profile
+    link(rel="stylesheet" type="text/css" href="/stylesheets/styles.css")
+    link(rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css")
+    script(src="https://code.jquery.com/jquery-3.6.4.min.js")
+    script(src="https://code.jquery.com/ui/1.12.1/jquery-ui.js")
+  body
+    nav
+      a(href!="/user/"+currentUser._id) 
+        .avatar
+          img.profile-pic(src=`${currentUser.profilePic}`, alt="Profile Picture")
+          span.profileName #{currentUser.fullName}
+      a(href='/')
+        button Home
+      button#logoutBtn Logout
+    main
+      if(isYou==true)
+          section#friend-requests
+            h2 Friend Requests 
+            for request in requests 
+              .request(id=request._id)
+                img.profile-pic(src=request.profilePic)
+                a(href!='/user/'+request._id)
+                  span.requestName #{request.fullName}
+                .friendDiv(data-id=request._id )             
+                  button.accept Accept 
+                  button.reject Reject
+          button#editProfile Edit Profile
+      section#profile-info
+        h2 Profile Information
+        img.profile-pic(src=`${user.profilePic}`, alt="Profile Picture")
+        p Full Name: #{user.fullName}
+        p Email: #{user.email}
+        p Bio: #{user.bio}
+        p Created On: #{user.dateCreated}
+        p Friends: #{user.friends.length}
+        p Followers: #{user.followers.length}
+        p Following: #{user.follows.length}
+      if(isYou==false)
+          a(href='/chat/'+createPrivateRoomKey(currentUser._id,user._id))
+            button Chat
+          if(isFollowsYou)
+            p this user is following you
+          if(isFriends==='yes')
+            p you are friends
+          button#followBtn(data-id=user._id) 
+            if(youFollowsThem) 
+              | Unfollow
+            else
+              | Follow
+          .friendDiv(data-id=user._id style='display:inline') 
+            if(isFriends=='yes')
+              button.unfriend Remove 
+            else if(isFriends=='no')
+               button.send Add Friend
+            else if(isFriends=='waiting you')
+              button.accept Accept
+              button.reject Reject
+            else if(isFriends=='waiting them')
+              button.cancel Cancel
+        
+      section#posts-container
+        h2 Posts
+        if(userPosts.length>0)
+          each post in userPosts
+            .post(id=post._id)
+              a(href!='/user/'+post.author._id) 
+                img.profile-pic(src=post.author.profilePic, alt="Author Profile Picture")
+                span.postAuthor #{post.author.fullName}
+              div.post-content
+                p.postContent #{post.content}
+                p
+                  span.postComments #{post.comments.length}
+                  | comments
+                p
+                  span.postLikes #{post.likes}
+                  | likes
+                if(isYou)
+                  div.buttons
+                    button.edit-post-btn Edit Post
+                    button.delete-post-btn Delete Post
+                div.buttons
+                  button.like-post-btn Like Post
+                  button.add-comment-btn Add Comment
+                  button.show-comments-btn Show Comments
+                .comments-container
+                  each comment in post.comments
+                    .comment(id=comment._id, data-postId=post._id)
+                      a(href!="/user/"+comment.author._id) 
+                            img.profile-pic(src=comment.author.profilePic, alt="Author Profile Picture")
+                            span.commentAuthor #{comment.author.fullName}
+                      div.comment-content
+                        p.commentContent #{comment.content}
+                        p
+                          span.commentLikes #{comment.likes}
+                          | likes
+                        button.like-comment-btn Like Comment
+                        if(isYou)
+                          div.buttons
+                            button.edit-comment-btn Edit Comment
+                            button.delete-comment-btn Delete Comment
+      section#friends-container
+        h2 Your Friends
+          each friend in friendsList 
+            .friend 
+              img.profile-pic(src=friend.profilePic)
+              a(href!='/user/'+friend._id)
+                span.friendName #{friend.fullName}
+      section#followers-following-container
+        h2 Followers and Following
+        .followers-container
+          h3 Followers
+          each follower in followersList 
+            .follower
+              img.profile-pic(src=follower.profilePic)
+              a(href!='/user/'+follower._id)
+                span.followerName #{follower.fullName}
+        .following-container
+          h3 Following
+          each follow in followsList 
+            .follow 
+              img.profile-pic(src=follow.profilePic)
+              a(href!='/user/'+follow._id)
+                span.followName #{follow.fullName}
+    #commentDialog(style="display: none;")
+      form#commentForm(data-method='post' data-id='' data-postId='')
+        textarea(name="content" class='commentContent' rows='8' cols='35' placeholder="Write your comment..." )
+        input(type="hidden" name="postId" class='postId' value='')
+        input(type="hidden" name="userId" class='userId' value=currentUser._id)
+    #profileDialog(style="display: none;")
+      form(id="profile-form")
+        label(for="profilePic") Profile Picture (Upload or URL):
+        input(type="file" id='profilePic' name="profilePic" accept="image/*")
+        input(type="text" id='profilePicUrl' name="profilePicUrl" placeholder="or enter URL")
+        label(for="firstname") First Name:
+        input(type="text" id="firstname" name="firstName"  value=currentUser.firstName)
+        br
+        label(for="lastname") Last Name:
+        input(type="text" id="lastname" name="lastName"  value=currentUser.lastName)
+        br
+        label(for='bio') Bio: 
+        textarea(id='bio' name='bio' value=currentUser.bio rows='4' cols='30')
+        br
+        label(for="email") Email:
+        input(type="email" id="email" name="email" value=currentUser.email)
+        br
+        label(for="password") Password:
+        input(type="password" id="password" name="password")
+    script.
+      $(() => {
+        $('#profileDialog').dialog({
+          autoOpen: false,
+          modal: true,
+          height: 400,
+          width: 500,
+          resizable: false,
+          movable: false,
+          buttons: {
+            Cancel: function () {
+              $(this).dialog('close');
+            },
+            Submit: function () {
+              $("#profile-form").submit();
+              $(this).dialog('close');
+            }
+          }
+        });
+        $('#profile-form').submit(function (e) {
+          e.preventDefault();
+          $.ajax({
+            type: 'put',
+            url: '/user',
+            data: $(this).serialize(),
+            success:(res)=>{
+              location.reload()
+            }
+          });
+        });
+        $('#logoutBtn').click(function (e) {
+          $.ajax({
+            type: "delete",
+            url: "/logout",
+            success: (res) => {
+              if (res) location.href = '/login'
+              else location.reload()
+            },
+            error: (err) => {
+              location.reload()
+            }
+          });
+        });
+        $(document).on('click','.edit-post-btn',function (e) {
+            $("#postForm").attr('data-method','put')
+            const postId = $(this).closest('.post').attr('id')
+            $('#postForm').attr('data-id',postId)
+            const val = $(this).closest('.post').find('.postContent').text()
+            $('#postForm').find('.postContent').val(val)
+            $('#postDialog').dialog('open');
+        })
+        $(document).on('click','.delete-post-btn',function (e) {
+          const postId = $(this).closest('.post').attr('id')
+          $.ajax({
+            type:'delete',
+            url:'/post/'+postId,
+            success:function(res){
+              $('#'+postId).remove()
+            }
+          })
+        })
+        $(document).on('click', '.like-post-btn', function (e) {
+          const postId = $(this).closest('.post').attr('id');
+          const btnText = $(this).text();
+          const likeButton = $(this);
+          $.ajax({
+            type: 'put',
+            url: `/post/${postId}/like`,
+            data: { inc: btnText === 'Like Post' },
+            success: function (res) {
+              likeButton.text(`${btnText === 'Like Post' ? 'Liked' : 'Like Post'}`);
+              likeButton.closest('.post').find('.postLikes').text(res.likes);
+            },
+            error: function (err) {
+              console.error(err);
+            },
+          });
+        });
+        $(document).on('click','.add-comment-btn',function(e){
+          $("#commentForm").attr('data-method','post')
+          const postId = $(this).closest('.post').attr('id')
+          $('#commentForm').attr('data-postId',postId)
+          $('#commentForm').find('.postId').val(postId)
+          $('#commentDialog').dialog('open');
+        })
+        $('#editProfile').on('click',()=>{$('#profileDialog').dialog('open')})
+        $('#commentDialog').dialog({
+          autoOpen: false,
+          modal: true,
+          height:300,
+          width:400,
+          resizable:false,
+          movable:false,
+          buttons: {
+            Cancel: function () {
+              $(this).dialog('close');
+            },
+            Comment: function () {
+              $('#commentForm').submit()
+              $(this).dialog('close');
+            }
+          }
+        });
+        $('#commentForm').submit(function(e){
+          e.preventDefault()
+            const type=$('#commentForm').attr('data-method')
+            const commentId=type==='put'?$('#commentForm').attr('data-id'):''
+            const postId=$('#commentForm').attr('data-postId')
+            $.ajax({
+                type:type,
+                url:"/comment/"+commentId,
+                data:$(this).serialize(),
+                success:({comment,length})=>{
+                    if(type==='post'){
+                    $('#'+postId).find('.comments-container').append(`
+                <div class='comment' id='${comment._id}'>
+                  <img class='profile-pic' src='${comment.author.profilePic}' alt="Author Profile Picture"/>
+                  <a href='/user/${comment.author._id}'><span class='commentAuthor'>${comment.author.firstName+' '+comment.author.lastName}</span></a>
+                  <p><span class='commentContent'>${comment.content}</span></p>
+                  <p><span class='commentLikes'>${comment.likes}</span> likes</p>
+                  <button class='like-comment-btn'>Like Comment</button>
+                  <button class='edit-comment-btn'>Edit Comment</button>
+                  <button class='delete-comment-btn'>Delete Comment</button>
+                </div>
+                `)
+                    }
+                    else{
+                      $('#'+comment._id).find('.commentContent').text(comment.content)
+                    }
+                    $('#commentForm')[0].reset()
+                }
+            })
+        })
+        $(document).on('click','.edit-comment-btn',function (e) {
+            $("#commentForm").attr('data-method','put')
+            const commentId = $(this).closest('.comment').attr('id')
+            $('#commentForm').attr('data-id',commentId)
+            const postId = $(this).closest('.comment').attr('data-postId')
+            $('#commentDialog').attr('data-postId',postId)
+            const val = $(this).closest('.comment').find('.commentContent').text()
+            $('#commentDialog').find('.commentContent').val(val)
+            $('#commentDialog').dialog('open');
+        })
+        $(document).on('click','.delete-comment-btn',function (e) {
+          const commentId = $(this).closest('.comment').attr('id')
+          $.ajax({
+            type:'delete',
+            url:'/comment/'+commentId,
+            success:function(res){
+              $('#'+commentId).closest('.post').find('.postComments').text(res.length)
+              $('#'+commentId).remove()
+            }
+          })
+        })
+        $(document).on('click','.like-comment-btn',function (e) {
+          const commentId = $(this).closest('.comment').attr('id');
+          const btnText = $(this).text();
+          const likeButton = $(this);
+          $.ajax({
+            type: 'put',
+            url: `/comment/${commentId}/like`,
+            data: { inc: btnText === 'Like Comment' },
+            success: function (res) {
+              likeButton.text(`${btnText === 'Like Comment' ? 'Liked' : 'Like Comment'}`);
+              likeButton.closest('.comment').find('.commentLikes').text(res.likes);
+            },
+            error: function (err) {
+              console.error(err);
+            },
+          });
+      })
+      $(document).on('click','.show-comments-btn',function (e) {
+          $(this).closest('.post').find('.comments-container').toggle()
+      })
+      $('#followBtn').click(function(e){
+        e.preventDefault()
+        const userId = $(this).attr('data-id')
+        $.ajax({
+          type:"put",
+          url:"/user/follow/"+userId,
+          success:(res)=>{
+            location.reload()
+          }
+        })
+      })
+      $('.accept').click(function(e){
+        e.preventDefault()
+        const userId = $(this).closest('.friendDiv').attr('data-id')
+        $.ajax({
+          type:"put",
+          url:"/user/friend/"+userId,
+          data:{event:"accept"},
+          success:(res)=>{
+            location.reload()
+          }
+        })
+      })
+      $('.unfriend').click(function(e){
+        e.preventDefault()
+        const userId = $(this).closest('.friendDiv').attr('data-id')
+        $.ajax({
+          type:"put",
+          url:"/user/friend/"+userId,
+          data:{event:"unfriend"},
+          success:(res)=>{
+            location.reload()
+          }
+        })
+      })
+      $('.send').click(function(e){
+        e.preventDefault()
+        const userId = $(this).closest('.friendDiv').attr('data-id')
+        $.ajax({
+          type:"put",
+          url:"/user/friend/"+userId,
+          data:{event:"send"},
+          success:(res)=>{
+            location.reload()
+          }
+        })
+      })
+      $('.reject').click(function(e){
+        e.preventDefault()
+        const userId = $(this).closest('.friendDiv').attr('data-id')
+        $.ajax({
+          type:"put",
+          url:"/user/friend/"+userId,
+          data:{event:"reject"},
+          success:(res)=>{
+            location.reload()
+          }
+        })
+      })
+      $('.cancel').click(function(e){
+        e.preventDefault()
+        const userId = $(this).closest('.friendDiv').attr('data-id')
+        $.ajax({
+          type:"put",
+          url:"/user/friend/"+userId,
+          data:{event:"cancel"},
+          success:(res)=>{
+            location.reload()
+          }
+        })
+      })      
+      });

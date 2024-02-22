@@ -1,0 +1,238 @@
+body {
+  font-family: "Arial", sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4;
+}
+
+header {
+  background-color: #333;
+  color: #fff;
+  padding: 10px;
+  text-align: center;
+}
+
+nav {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  background-color: #eee;
+}
+
+main {
+  max-width: 800px;
+  margin: 20px auto;
+}
+
+section {
+  margin-bottom: 20px;
+  padding: 20px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+input {
+  width: 90%;
+  padding: 8px;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
+#searchBar {
+  margin-left: 10px;
+  padding: 5px;
+  font-size: 14px;
+  width: 35%;
+}
+
+.search-results {
+  display: none;
+  position: absolute;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-height: 200px;
+  left: 70%;
+  top: 5%;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  z-index: 1000;
+}
+.search-results img {
+  width: 30%;
+}
+.search-result-item {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover {
+  background-color: #f5f5f5;
+}
+button {
+  background-color: #333;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+}
+
+a {
+  text-decoration: none;
+  color: cyan;
+}
+
+.error-message {
+  color: red;
+  margin-bottom: 10px;
+}
+#login-form,
+#register-form {
+  background-color: #fff;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+#login-form label,
+#register-form label {
+  font-weight: bold;
+}
+
+#login-form input,
+#register-form input {
+  margin-bottom: 15px;
+}
+nav {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  background-color: #eee;
+  align-items: center;
+}
+
+img.profile-pic {
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.profile-pic {
+  max-width: 50px;
+  max-height: 50px;
+  border-radius: 50%;
+}
+
+.post-content,
+.comment-content {
+  margin-left: 10px;
+  display: inline-block;
+}
+
+.buttons {
+  margin-top: 10px;
+}
+
+div.post-content,
+div.comment-content {
+  display: flex;
+  flex-direction: column;
+}
+
+button.edit-post-btn,
+button.delete-post-btn,
+button.like-post-btn,
+button.add-comment-btn,
+button.show-comments-btn,
+button.like-comment-btn,
+button.edit-comment-btn,
+button.delete-comment-btn {
+  margin-bottom: 5px;
+}
+
+nav button {
+  margin-right: 10px;
+}
+#login-form input[type="submit"],
+#register-form input[type="submit"] {
+  background-color: #333;
+  color: #fff;
+}
+#profile-info,
+#posts-container,
+#friends-container,
+#followers-following-container {
+  background-color: #fff;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+.post,
+.comment {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+}
+
+.comments-container {
+  margin-top: 20px;
+}
+.add-comment-btn,
+.like-post-btn,
+.show-comments-btn,
+.like-comment-btn {
+  background-color: #333;
+  color: #fff;
+  margin-right: 10px;
+  padding: 8px 12px;
+  border: none;
+  cursor: pointer;
+}
+
+.show-comments-btn:hover,
+.like-comment-btn:hover {
+  background-color: #555;
+}
+.follower-container,
+.following-contianer,
+#friends.container,
+#recommend-container {
+  overflow: auto;
+  display: flex;
+}
+.main {
+  display: flex;
+  align-items: center;
+}
+#messages-container {
+  height: 50vh;
+  overflow: auto;
+}
+#messages-container li {
+  list-style-type: none;
+}
+.username {
+  font-weight: bold;
+}
+.system {
+  color: purple;
+}
+.friend img,
+.person img,
+.follower img,
+.follow img {
+  height: 50%;
+}

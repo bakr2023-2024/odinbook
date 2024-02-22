@@ -1,0 +1,23 @@
+doctype html
+html
+  head
+    title Login
+    link(rel="stylesheet" type="text/css" href="./stylesheets/styles.css")
+    script(src="https://code.jquery.com/jquery-3.6.4.min.js")
+  body
+    header
+      h1 Login
+    if(messages.error)
+      p.error-message=messages.error
+    main
+      form(action="/login" method="post")
+        label(for="email") Email:
+        input(type="email" id="email" name="email" required)
+        br
+        label(for="password") Password:
+        input(type="password" id="password" name="password" required)
+        br
+        input(type="submit" value="Login")
+      p
+        | Don't have an account? 
+        a(href="/register") Register

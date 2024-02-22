@@ -1,0 +1,59 @@
+doctype html
+html
+  head
+    title Chat
+    link(rel="stylesheet" type="text/css" href="/stylesheets/styles.css")
+    link(rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css")
+    script(src="https://code.jquery.com/jquery-3.6.4.min.js")
+    script(src="https://code.jquery.com/ui/1.12.1/jquery-ui.js")
+  body
+    nav
+      a(href!="/user/"+currentUser._id) 
+        .avatar
+          img.profile-pic(src=`${currentUser.profilePic}`, alt="Profile Picture")
+          span.profileName #{currentUser.fullName}
+      a(href='/')
+        button Home
+      button#logoutBtn Logout
+    h3 private chat with 
+      a(href!='/user/'+targetUser._id) #{targetUser.fullName}
+    p users online: 
+        span#onlineUsers 0
+    main
+      section#messages-container
+        for message in chatHistory 
+          li
+            | #{message.date} 
+            span.username #{message.name}
+            | : #{message.message}
+      section#input-container
+        input#message-input(type="text" placeholder="Type your message")
+        button#send-btn Send
+    script(src="/socket.io/socket.io.js")
+    script.
+        $(() => {
+        const roomKey=window.location.href.split('/')[4]
+        const socket = io({query:{"type":'private',"roomKey":`${roomKey}`}});
+        const messagesContainer = $("#messages-container");
+        socket.on("user", (data) => {
+            messagesContainer.append(`
+                <li class='system'>
+                ${data.date} <a class='username'>${data.name}</a> has ${data.connected ? "connected" : "disconnected"}
+                </li>`);
+            $("#onlineUsers").text(data.onlineUsers);
+        });
+        socket.on("new message", (data) => {
+            messagesContainer.append(`
+                <li>
+                ${data.date} <a class='username' href='/user/${data.id}'>${data.name}</a>: ${data.message}
+                </li>
+                `);
+        });
+        $("#send-btn").click(function () {
+            const messageInput = $("#message-input").val();
+            if (!messageInput) return false;
+            socket.emit("message", { message: messageInput });
+            $("#message-input").val("");
+            return false;
+        });
+        })

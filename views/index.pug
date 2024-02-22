@@ -1,0 +1,339 @@
+doctype html
+html
+  head
+    title Welcome Back #{user.fullName}
+    link(rel="stylesheet" type="text/css" href="./stylesheets/styles.css")
+    link(rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css")
+    script(src="https://code.jquery.com/jquery-3.6.4.min.js")
+    script(src="https://code.jquery.com/ui/1.12.1/jquery-ui.js")
+  body
+    nav
+      a(href!="/user/"+user._id) 
+        .avatar
+          img.profile-pic(src=`${user.profilePic}`, alt="Profile Picture")
+          span.profileName #{user.fullName}
+      button#createPostBtn Create Post
+      button#chatBtn Chat Room
+      input#searchBar(type="text" placeholder="Search users")
+      .search-results(style="display: none;")
+      button#logoutBtn Logout
+    main.main
+      section#posts-container
+        h2 Posts
+        if(allPosts.length>0)
+          each post in allPosts
+            .post(id=post._id)
+              a(href!='/user/'+post.author._id) 
+                img.profile-pic(src=post.author.profilePic, alt="Author Profile Picture")
+                span.postAuthor #{post.author.fullName}
+              div.post-content
+                p.postContent #{post.content}
+                p
+                  span.postComments #{post.comments.length}
+                  | comments
+                p
+                  span.postLikes #{post.likes}
+                  | likes
+                if(String(post.author._id)===String(user._id))
+                  div.buttons
+                    button.edit-post-btn Edit Post
+                    button.delete-post-btn Delete Post
+                div.buttons
+                  button.like-post-btn Like Post
+                  button.add-comment-btn Add Comment
+                  button.show-comments-btn Show Comments
+                .comments-container
+                  each comment in post.comments
+                    .comment(id=comment._id, data-postId=post._id)
+                      a(href!="/user/"+comment.author._id) 
+                            img.profile-pic(src=comment.author.profilePic, alt="Author Profile Picture")
+                            span.commentAuthor #{comment.author.fullName}
+                      div.comment-content
+                        p.commentContent #{comment.content}
+                        p
+                          span.commentLikes #{comment.likes}
+                          | likes
+                        button.like-comment-btn Like Comment
+                        if(String(comment.author._id)===String(user._id))
+                          div.buttons
+                            button.edit-comment-btn Edit Comment
+                            button.delete-comment-btn Delete Comment
+      section#online-friends 
+        h2 online friends 
+        each friend in friends 
+          .friend 
+            img.profile-pic(src=friend.profilePic)
+            a(href!='/user/'+friend._id)
+            a.personName(href!='/user/'+friend._id) #{friend.firstName+' '+friend.lastName}
+      section#recommend-container
+        h2 People you may know 
+        each person in people 
+          .person 
+            img.profile-pic(src=person.profilePic)
+            a(href!='/user/'+person._id)
+              span.personName #{person.firstName+' '+person.lastName}
+    #commentDialog(style="display: none;")
+      form#commentForm(data-method='post' data-id='' data-postId='')
+        textarea(name="content" class='commentContent' rows='8' cols='35' placeholder="Write your comment..." required)
+        input(type="hidden" name="postId" class='postId' value='')
+        input(type='hidden' name='userId' class='userId' value=user._id)
+    #postDialog(style="display: none;")
+      form#postForm(data-method='post' data-id='')
+        textarea(name="content" class='postContent' rows='8' cols='35' placeholder="Write your post..." required)
+    script.
+      $(() => {
+        $('#logoutBtn').click(function (e) {
+          $.ajax({
+            type: "delete",
+            url: "/logout",
+            success: (res) => {
+              if (res) location.href = '/login'
+              else location.reload()
+            },
+            error: (err) => {
+              location.reload()
+            }
+          });
+        });
+        $('#createPostBtn').click(function () {
+          $("#postForm").attr('data-method','post')
+          $('#postDialog').dialog('open');
+        });
+        $('#postDialog').dialog({
+          autoOpen: false,
+          modal: true,
+          height:300,
+          width:400,
+          resizable:false,
+          movable:false,
+          buttons: {
+            Cancel: function () {
+              $(this).dialog('close');
+            },
+            Post: function () {
+                $("#postForm").submit()
+              $(this).dialog('close');
+            }
+          }
+        });
+        $('#postForm').submit(function(e){
+          e.preventDefault()
+            const type=$('#postForm').attr('data-method')
+            const postId=type==='put'?$('#postForm').attr('data-id'):''
+            $.ajax({
+                type:type,
+                url:"/post/"+postId,
+                data:$(this).serialize(),
+                success:(post)=>{
+                    if(type==='post'){
+                      const commentContainer = ''
+                      post.comments.forEach(comment=>{
+                        commentContainer+=`
+                <div class='comment' id='${comment._id}'>
+                  <img class='profile-pic' src='${comment.author.profilePic}' alt="Author Profile Picture"/>
+                  <a href='/user/${comment.author._id}'><span class='commentAuthor'>${comment.author.firstName+' '+comment.author.lastName}</span></a>
+                  <p><span class='commentContent'>${comment.content}</span></p>
+                  <p><span class='commentLikes'>${comment.likes}</span> likes</p>
+                  <button class='like-comment-btn'>Like Comment</button>
+                  <button class='edit-comment-btn'>Edit Comment</button>
+                  <button class='delete-comment-btn'>Delete Comment</button>
+                </div>
+                        `
+                      })
+                      $('#posts-container').append(`
+          <div class='post' id='${post._id}'>
+            <img class='profile-pic' src='${post.author.profilePic}' alt="Author Profile Picture"/>
+            <a href="/user/${post._id}"><span class='postAuthor'>${post.author.firstName+' '+post.author.lastName}</span></a>
+            <p><span class='postContent'>${post.content}</span></p>
+            <p><span class='postLikes'>${post.likes}</span> likes</p>
+            <p><span class='postComments'>${post.comments.length}</span> comments</p>
+            <button class='edit-post-btn'>Edit Post</button>
+            <button class='delete-post-btn'>Delete Post</button>
+            <button class='add-comment-btn'>Add Comment</button>
+            <button class='like-post-btn'>Like Post</button>
+            <button class='show-comments-btn'>Show Comments</button>
+            <div class='comments-container' style='display:none'>
+            ${commentContainer}
+            </div>
+          </div>
+                      `)
+                    }
+                    else{
+                      $('#'+postId).find('.postContent').text(post.content)
+                    }
+                    $('#postForm')[0].reset()
+                }
+            })
+        })
+        $(document).on('click','.edit-post-btn',function (e) {
+            $("#postForm").attr('data-method','put')
+            const postId = $(this).closest('.post').attr('id')
+            $('#postForm').attr('data-id',postId)
+            const val = $(this).closest('.post').find('.postContent').text()
+            $('#postForm').find('.postContent').val(val)
+            $('#postDialog').dialog('open');
+        })
+        $(document).on('click','.delete-post-btn',function (e) {
+          const postId = $(this).closest('.post').attr('id')
+          $.ajax({
+            type:'delete',
+            url:'/post/'+postId,
+            success:function(res){
+              $('#'+postId).remove()
+            }
+          })
+        })
+        $(document).on('click', '.like-post-btn', function (e) {
+          const postId = $(this).closest('.post').attr('id');
+          const btnText = $(this).text();
+          const likeButton = $(this);
+          $.ajax({
+            type: 'put',
+            url: `/post/${postId}/like`,
+            data: { inc: btnText === 'Like Post' },
+            success: function (res) {
+              likeButton.text(`${btnText === 'Like Post' ? 'Liked' : 'Like Post'}`);
+              likeButton.closest('.post').find('.postLikes').text(res.likes);
+            },
+            error: function (err) {
+              console.error(err);
+            },
+          });
+        });
+        $(document).on('click','.add-comment-btn',function(e){
+          $("#commentForm").attr('data-method','post')
+          const postId = $(this).closest('.post').attr('id')
+          $('#commentForm').attr('data-postId',postId)
+          $('#commentForm').find('.postId').val(postId)
+          $('#commentDialog').dialog('open');
+        })
+        $('#commentDialog').dialog({
+          autoOpen: false,
+          modal: true,
+          height:300,
+          width:400,
+          resizable:false,
+          movable:false,
+          buttons: {
+            Cancel: function () {
+              $(this).dialog('close');
+            },
+            Comment: function () {
+              $('#commentForm').submit()
+              $(this).dialog('close');
+            }
+          }
+        });
+        $('#commentForm').submit(function(e){
+          e.preventDefault()
+            const type=$('#commentForm').attr('data-method')
+            const commentId=type==='put'?$('#commentForm').attr('data-id'):''
+            const postId=$('#commentForm').attr('data-postId')
+            $.ajax({
+                type:type,
+                url:"/comment/"+commentId,
+                data:$(this).serialize(),
+                success:({comment,length})=>{
+                    if(type==='post'){
+                    $('#'+postId).find('.comments-container').append(`
+                <div class='comment' id='${comment._id}'>
+                  <img class='profile-pic' src='${comment.author.profilePic}' alt="Author Profile Picture"/>
+                  <a href='/user/${comment.author._id}'><span class='commentAuthor'>${comment.author.firstName+' '+comment.author.lastName}</span></a>
+                  <p><span class='commentContent'>${comment.content}</span></p>
+                  <p><span class='commentLikes'>${comment.likes}</span> likes</p>
+                  <button class='like-comment-btn'>Like Comment</button>
+                  <button class='edit-comment-btn'>Edit Comment</button>
+                  <button class='delete-comment-btn'>Delete Comment</button>
+                </div>
+                `)
+                $('#'+postId).find('.postComments').text(length)
+                    }
+                    else{
+                      $('#'+comment._id).find('.commentContent').text(comment.content)
+                    }
+                    $('#commentForm')[0].reset()
+                }
+            })
+        })
+        $(document).on('click','.edit-comment-btn',function (e) {
+            $("#commentForm").attr('data-method','put')
+            const commentId = $(this).closest('.comment').attr('id')
+            $('#commentForm').attr('data-id',commentId)
+            const postId = $(this).closest('.comment').attr('data-postId')
+            $('#commentDialog').attr('data-postId',postId)
+            const val = $(this).closest('.comment').find('.commentContent').text()
+            $('#commentDialog').find('.commentContent').val(val)
+            $('#commentDialog').dialog('open');
+        })
+        $(document).on('click','.delete-comment-btn',function (e) {
+          const commentId = $(this).closest('.comment').attr('id')
+          $.ajax({
+            type:'delete',
+            url:'/comment/'+commentId,
+            success:function(res){
+              $('#'+commentId).closest('.post').find('.postComments').text(res.length)
+              $('#'+commentId).remove()
+            }
+          })
+        })
+        $(document).on('click','.like-comment-btn',function (e) {
+          const commentId = $(this).closest('.comment').attr('id');
+          const btnText = $(this).text();
+          const likeButton = $(this);
+          $.ajax({
+            type: 'put',
+            url: `/comment/${commentId}/like`,
+            data: { inc: btnText === 'Like Comment' },
+            success: function (res) {
+              likeButton.text(`${btnText === 'Like Comment' ? 'Liked' : 'Like Comment'}`);
+              likeButton.closest('.comment').find('.commentLikes').text(res.likes);
+            },
+            error: function (err) {
+              console.error(err);
+            },
+          });
+        })
+        $(document).on('click','.show-comments-btn',function (e) {
+          $(this).closest('.post').find('.comments-container').toggle()
+        })
+        const searchResults = $('.search-results');
+        $('#searchBar').on('input', function () {
+          const searchValue = $(this).val().trim();
+          console.log(searchValue)
+          searchResults.empty()
+          if (searchValue.length>1) {
+            $.ajax({
+              type: 'get',
+              url: `/user/find`,
+              data: { name: searchValue },
+              success: (users) => {
+                if (users.length > 0) {
+                  users.forEach((user) => {
+                    const userProfile = `
+                      <div class='search-result'>
+                        <a href='/user/${user._id}'>
+                        <img class='profile-pic' src='${user.profilePic}' alt='Profile Picture'/>
+                        <span class='personName'>${user.firstName+' '+user.lastName}</span></a>
+                      </div>
+                    `;
+                    searchResults.append(userProfile);
+                  });
+                  searchResults.show();
+                } else {
+                  searchResults.html('<p>No users found</p>').show();
+                }
+              },
+              error: (err) => {
+                console.error(err);
+                searchResults.html('<p>Error fetching users</p>').show();
+              },
+            });
+          } else {
+            searchResults.hide();
+          }
+        });
+        $('#searchBar').one('focusout',function(){
+          searchResults.hide();
+        })
+        $('#chatBtn').on("click",()=>{window.location.href='/chat'})
+      });
